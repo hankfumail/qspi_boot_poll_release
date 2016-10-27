@@ -203,7 +203,7 @@ typedef void (*XilAppEntry)(void *data);
 #define print_flush_func	 
 //#define print_flush_func	 fflush(stdout);
 
-#if 1
+#if 0
 #define err_print(format,args...) 			do { print_func(format, ##args); print_flush_func; }while(0)
 
 #else
@@ -212,7 +212,7 @@ typedef void (*XilAppEntry)(void *data);
 
 #endif
 
-#if 1
+#if 0
 #define dbg_print(format,args...) 			do { print_func(format, ##args); print_flush_func; }while(0)
 #define dbg_print_line( format,args...) 	do {  print_func("Func: %16s line:%6d: ", __func__, __LINE__);  print_func(format, ##args); print_flush_func; }while(0)
 #define dbg_print_var_hex(xxx) 				do {  print_func( "%s = 0x%08x\r\n", #xxx, (unsigned int)xxx ); }while(0)
@@ -225,7 +225,7 @@ typedef void (*XilAppEntry)(void *data);
 
 #endif
 
-#if 0
+#if 1
 #define err_put_str(format,args...) 			do { print(format); }while(0)
 
 #else
@@ -275,7 +275,8 @@ static int ErrorCount;
  * Buffers used during read and write transactions.
  */
 static u8 ReadBuffer[PAGE_SIZE + READ_WRITE_EXTRA_BYTES + 4];
-static u8 WriteBuffer[PAGE_SIZE + READ_WRITE_EXTRA_BYTES];
+//static u8 WriteBuffer[PAGE_SIZE + READ_WRITE_EXTRA_BYTES];  // 0nly 32 bytes is enough
+static u8 WriteBuffer[ 32 + READ_WRITE_EXTRA_BYTES];  // 0nly 32 bytes is enough
 
 /*
  * Byte offset value written to Flash. This needs to be redefined for writing
@@ -291,7 +292,7 @@ extern int __rodata_end[];
 
 /************************** Function Definitions *****************************/
 
-
+// release version does not work if memcpy() is used.
 void mb_mem_cpy( u32 *pu32_dst, u32 *pu32_src, u32 u32_byte_len )
 {
 
@@ -325,6 +326,9 @@ int main(void)
 	XSpi_Config *ConfigPtr;	/* Pointer to Configuration data */
 
     init_platform();
+
+	/* Disable exceptions and interrupts.	 */
+	Xil_ExceptionDisable();
 
     dbg_print("\n\rQSPI boot test in %s, %s, %s\n\r", __FILE__, __DATE__, __TIME__ );
 	dbg_print_var_hex(__rodata_start);
@@ -498,9 +502,6 @@ int main(void)
 	dbg_print("\n\rLoad application... Done at Line: %d.\n\r", __LINE__ );
 
 	dbg_print("Clear machine statue at Line: %d.\n\r", __LINE__ );
-	//
-	/* Disable exceptions.	 */
-	Xil_ExceptionDisable();
 
 	// clean branch target cache
 	mbar(0);
